@@ -1,6 +1,7 @@
 # Dockerfile Skeleton — Expense Tracker  (Node.js)
 # Niveau débutant: Modules 5-7 (Docker concepts, Docker practice, Docker Compose)
 # Votre tâche: Compléter ce fichier Dockerfile pour conteneuriser l'application
+# personnalisée per valendino pierre, en suivant les étapes indiquées dans les commentaires.
 # ========================================================================
 # TÂCHE 1: Image de base
 # ========================================================================
