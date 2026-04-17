@@ -192,7 +192,7 @@ jobs:
     # Module 7: Docker Compose — Configuration via variables
     # Conseil: Trouvez les valeurs dans docker-compose.yml ou votre configuration
     env:
-      DB_HOST: postgres          # Tâche: Service name dans docker-compose? Conseil: Pas 'localhost'
+      DB_HOST: db          # Tâche: Service name dans docker-compose? Conseil: Pas 'localhost'
       DB_PORT: 5432          # Tâche: Port PostgreSQL? Conseil: Standard database port
       DB_NAME: ${{ secrets.DB_NAME }}        # Variable secrète depuis GitHub
       DB_USER: ${{ secrets.DB_USER }}        # Variable secrète depuis GitHub
