@@ -128,7 +128,7 @@ jobs:
     
     # Variables d'environnement utilisées par Docker Compose
     env:
-      DB_HOST: db
+      DB_HOST: localhost
       DB_PORT: 5432
       DB_NAME: ${{ secrets.DB_NAME }}
       DB_USER: ${{ secrets.DB_USER }}
@@ -147,17 +147,17 @@ jobs:
         run: |
           SECRETS_OK=true
           
-          if [ -z "${{ env.DB_PASSWORD_CHECK }}" ]; then
+          if [ -z "${{ env.DB_PASSWORD }}" ]; then
             echo "ERROR: DB_PASSWORD missing"
             SECRETS_OK=false
           fi
           
-          if [ -z "${{ env.DB_USER_CHECK }}" ]; then
+          if [ -z "${{ env.DB_USER }}" ]; then
             echo "ERROR: DB_USER missing"
             SECRETS_OK=false
           fi
           
-          if [ -z "${{ env.DB_NAME_CHECK }}" ]; then
+          if [ -z "${{ env.DB_NAME }}" ]; then
             echo "ERROR: DB_NAME missing"
             SECRETS_OK=false
           fi
