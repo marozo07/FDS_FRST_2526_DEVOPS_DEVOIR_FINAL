@@ -15,7 +15,7 @@ services:
     container_name: expense-tracker-nodejs-valendino
 
     env_file:
-      - ../.env.docker
+      - .env.docker
 
     ports:
       - "3000:3000"   # Port externe:interne
