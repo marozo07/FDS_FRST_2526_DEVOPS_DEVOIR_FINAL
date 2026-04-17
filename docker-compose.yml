@@ -9,7 +9,7 @@ services:
   # ===============================
   web:
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile   # Fichier Dockerfile à la racine
 
     container_name: expense-tracker-nodejs-valendino
