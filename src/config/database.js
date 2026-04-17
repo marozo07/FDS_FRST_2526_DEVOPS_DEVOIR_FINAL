@@ -1,6 +1,7 @@
 /**
  * Database Configuration
  * Connects to PostgreSQL using environment variables
+ *  personnaliser par valendino Pierre 
  * Module 8 Expense Tracker - Node.js Implementation
  */
 
@@ -12,6 +13,14 @@ const dbHost = process.env.DB_HOST || 'localhost';
 const dbPort = process.env.DB_PORT || 5432;
 const dbUser = process.env.DB_USER || 'postgres';
 const dbPassword = process.env.DB_PASSWORD || 'password';
+
+const poolConfig = {
+  host: dbHost,
+  port: dbPort,
+  database: dbName,
+  user: dbUser,
+  password: dbPassword,
+};
 
 // Create database if it doesn't exist
 const ensureDatabase = async () => {
@@ -47,13 +56,7 @@ const ensureDatabase = async () => {
 };
 
 // Create connection pool
-const pool = new Pool({
-  host: dbHost,
-  port: dbPort,
-  database: dbName,
-  user: dbUser,
-  password: dbPassword,
-});
+const pool = new Pool(poolConfig);
 
 // Initialize database schema on first run (non-blocking)
 const initializeDatabase = async () => {

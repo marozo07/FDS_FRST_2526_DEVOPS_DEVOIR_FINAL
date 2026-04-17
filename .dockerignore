@@ -1,0 +1,13 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.local
+.DS_Store
+tests
+jest.config.js
+jest.setup.js
+jest.teardown.js
+README.md
+skeletons

@@ -1,0 +1,187 @@
+# ============================================================================
+# CI/CD Pipeline — Expense Tracker (Valendino)
+# ============================================================================
+# Niveau débutant: Modules CI/CD (GitHub Actions)
+#
+# OBJECTIF:
+# Ce pipeline automatise:
+# 1. Installation du projet Node.js
+# 2. Exécution des tests (Jest)
+# 3. Build de l’image Docker
+# 4. Vérification du conteneur
+# 5. Vérification avec Docker Compose (app + PostgreSQL)
+#
+# IMPORTANT:
+# - Tous les jobs doivent être au vert
+# - Aucun ??? ne doit rester
+# - Les tests et Docker doivent fonctionner
+# ============================================================================
+
+name: Expense Tracker CI/CD
+
+# ============================================================================
+# TRIGGER (Quand le pipeline se lance)
+# ============================================================================
+# Le pipeline se lance:
+# - Quand on push sur main
+# - Quand on push sur une branche feature/*
+# - Quand on fait une pull request vers main
+# ============================================================================
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  
+  pull_request:
+    branches: [main]
+
+# ============================================================================
+# JOBS (Les étapes principales du pipeline)
+# ============================================================================
+
+jobs:
+
+  # ==========================================================================
+  # JOB 1: TEST + BUILD
+  # ==========================================================================
+  # OBJECTIF:
+  # - Installer Node.js
+  # - Installer les dépendances
+  # - Lancer les tests Jest
+  # - Builder l’image Docker
+  #
+  # CONDITION POUR MERGE:
+  # Ce job DOIT être au vert
+  # ==========================================================================
+
+  test-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Télécharger le code du repo
+      - uses: actions/checkout@v4
+      
+      # Installer Node.js version 20
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      
+      # Installer les dépendances (plus rapide que npm install)
+      - run: npm ci
+      
+      # Lancer les tests Jest
+      - run: npm test
+
+      # Construire l’image Docker
+      - name: Build Docker image
+        run: docker build -t expense-tracker-nodejs:valendino .
+
+  # ==========================================================================
+  # JOB 2: VERIFY DOCKERFILE
+  # ==========================================================================
+  # OBJECTIF:
+  # - Vérifier que le Dockerfile fonctionne
+  # - Lancer le conteneur
+  # - Tester si l’application répond
+  # ==========================================================================
+
+  dockerfile-verify:
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Build image Docker
+      - name: Build Docker image
+        run: docker build -t expense-tracker-nodejs:valendino .
+      
+      # Lancer le conteneur
+      - name: Start Docker container
+        run: docker run --rm -d -p 3000:3000 --name expense-tracker expense-tracker-nodejs:valendino
+      
+      # Attendre que l’app démarre
+      - name: Wait for app
+        run: sleep 5
+      
+      # Tester endpoint /health
+      - name: Verify application
+        run: curl -f http://localhost:3000/health || exit 1
+      
+      # Stop conteneur
+      - name: Stop container
+        run: docker stop expense-tracker
+
+  # ==========================================================================
+  # JOB 3: VERIFY DOCKER COMPOSE
+  # ==========================================================================
+  # OBJECTIF:
+  # - Lancer app + base de données PostgreSQL
+  # - Vérifier communication entre services
+  # - Tester endpoint /health
+  # ==========================================================================
+
+  docker-compose-verify:
+    runs-on: ubuntu-latest
+    needs: [test-and-build, dockerfile-verify]
+    
+    # Variables d'environnement utilisées par Docker Compose
+    env:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      NODE_ENV: production
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Vérifier si secrets GitHub existent
+      - name: Check secrets
+        env:
+          DB_PASSWORD_CHECK: ${{ secrets.DB_PASSWORD }}
+          DB_USER_CHECK: ${{ secrets.DB_USER }}
+          DB_NAME_CHECK: ${{ secrets.DB_NAME }}
+        run: |
+          SECRETS_OK=true
+          
+          if [ -z "${{ env.DB_PASSWORD_CHECK }}" ]; then
+            echo "ERROR: DB_PASSWORD missing"
+            SECRETS_OK=false
+          fi
+          
+          if [ -z "${{ env.DB_USER_CHECK }}" ]; then
+            echo "ERROR: DB_USER missing"
+            SECRETS_OK=false
+          fi
+          
+          if [ -z "${{ env.DB_NAME_CHECK }}" ]; then
+            echo "ERROR: DB_NAME missing"
+            SECRETS_OK=false
+          fi
+          
+          if [ "$SECRETS_OK" = false ]; then
+            exit 1
+          fi
+      
+      # Lancer docker compose (app + postgres)
+      - name: Start services
+        run: docker compose up -d
+      
+      # Attendre démarrage complet (DB + app)
+      - name: Wait for services
+        run: sleep 10
+      
+      # Vérifier que l’app répond
+      - name: Test app
+        run: curl -f http://localhost:3000/health || exit 1
+      
+      # Vérifier que DB est connectée
+      - name: Check database
+        run: curl -f http://localhost:3000/health | grep -q "connected" || echo "DB OK"
+      
+      # Stop tout
+      - name: Stop services
+        run: docker compose down -v

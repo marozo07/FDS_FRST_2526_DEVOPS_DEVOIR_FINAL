@@ -1,4 +1,6 @@
 /**
+  * personaliser par valendino pierre 
+
  * Server Entry Point
  * Express.js application for Expense Tracker
  * Module 8 - Expense Tracker - Node.js Implementation
@@ -67,6 +69,15 @@ let server;
 if (process.env.NODE_ENV !== 'test') {
   server = app.listen(PORT, () => {
     console.log(`✅ Expense Tracker running on http://localhost:${PORT}`);
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${PORT} is already in use. Stop the process or container using this port and restart the app.`);
+      process.exit(1);
+    }
+    console.error('❌ Server error:', error);
+    process.exit(1);
   });
 
   // Graceful shutdown

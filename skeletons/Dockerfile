@@ -7,21 +7,23 @@
 # ========================================================================
 # Qu'est-ce qu'une image de base? (Module 5: Principes Docker)
 # Une image de base contient le système d'exploitation et les outils de base
-# 
+# Réponse: Une image de base est le point de départ d'un conteneur Docker. Elle contient le système d'exploitation de base
+# et les outils nécessaires (comme Node.js ici) pour faire fonctionner l'application.
+#
 # Options recommandées pour Node.js:
 #   - Variante alpine:  Petit, rapide (~150MB)
 #   - Variante slim:    Moyen (~180MB)
 #   - Variante complet: Tout inclus (~900MB)
 #
 # Conseil pour débutants: Choisir la variante la plus légère pour commencer
-FROM ???
+FROM node:18-alpine
 
 # ========================================================================
 # TÂCHE 2: Répertoire de travail du conteneur
 # ========================================================================
 # C'est comme "cd" - tous les fichiers et commandes utiliseront ce dossier
 # Conseil: Utiliser un chemin absolu dans le conteneur, pas à la racine
-WORKDIR ???
+WORKDIR /app
 
 # ========================================================================
 # TÂCHE 3 & 4: Installer les dépendances (2 étapes)
@@ -29,42 +31,50 @@ WORKDIR ???
 # ÉTAPE 3: Copier les fichiers de dépendances
 # Quels fichiers définissent les dépendances Node.js?
 # Conseil: Dois-je copier package.json? Dois-je copier le lock file?
-COPY ???
+# Réponse: Les fichiers package.json et package-lock.json définissent les dépendances. On copie d'abord seulement ces fichiers
+# pour optimiser le cache Docker - si les dépendances ne changent pas, Docker réutilise la couche d'installation.
+COPY package*.json ./
 
 # ÉTAPE 4: Installer les dépendances
 # Deux commandes disponibles: npm install vs npm ci
 # Conseil: Lequel utiliser dans Docker pour résultats déterministes?
-RUN ???
+# Réponse: npm ci est déterministe et plus rapide que npm install. Il installe exactement les versions définies
+# dans package-lock.json, garantissant des builds reproductibles dans Docker.
+RUN npm ci
 
 # ========================================================================
 # TÂCHE 5: Copier le code source de l'application
 # ========================================================================
 # Quels fichiers copier dans le conteneur?
 # Conseil: Quels dossiers contiennent le code applicatif?
+# Réponse: On copie tous les fichiers du projet (.) vers le répertoire de travail (/app).
+# Le .dockerignore devrait exclure node_modules/, .git/, etc. pour optimiser la taille.
 #
 # Format: COPY <source locale> <destination conteneur>
 # Conseil: Structurez bien pour ne pas copier node_modules/ ou .git/
 #
 # Astuce: Un fichier .dockerignore permet de spécifier les fichiers à ignorer
-COPY ???
+COPY . .
 
 # ========================================================================
 # TÂCHE 6: Exposer le port
 # ========================================================================
 # Quel port l'application utilise-t-elle?
 # Conseil: Consultez src/server.js et cherchez "listen" ou "port"
+# Réponse: L'application utilise le port 3000 comme défini dans src/server.js (const PORT = process.env.PORT || 3000).
 #
 # Note: EXPOSE est informatif (pas obligatoire), mais bon pour la documentation conteneur
 # Le port réel est mappé dans docker-compose.yml
-EXPOSE ???
+EXPOSE 3000
 
 # ========================================================================
 # TÂCHE 7: Commande de démarrage du conteneur
 # ========================================================================
 # Que doit-il se passer quand le conteneur démarre?
 # Conseil: Regardez package.json → scripts pour voir les valeurs disponibles
+# Réponse: Le conteneur doit démarrer l'application Node.js. Le script "start" dans package.json lance "node src/server.js".
 # Format: CMD ["commande", "arg1", "arg2", ...]
-CMD ???
+CMD ["npm", "start"]
 
 # ========================================================================
 # NOTES PÉDAGOGIQUES (de Module 5-6)
