@@ -1,3 +1,5 @@
+# Utiliser une image de base Node.js légère
+# AMELIORATION: Par valendino - Choix de l'image alpine pour une taille réduite
 FROM node:18-alpine
 
 WORKDIR /app
